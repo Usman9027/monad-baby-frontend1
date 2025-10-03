@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monad Baby Game</title>
+  <script src="https://cdn.ethers.io/lib/ethers-6.13.1.umd.min.js"></script>
+  <style>
+    body { font-family: Arial; text-align: center; background: #f0f0f0; }
+    button { padding: 10px 20px; margin: 10px; font-size: 18px; background: purple; color: white; border: none; cursor: pointer; }
+    button:hover { background: darkpurple; }
+    h1 { color: purple; }
+    p { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Monad Baby Game! ??</h1>
+  <p>Transfer MBABY tokens for a 1% chance at 100 bonus tokens!</p>
+  <button id="connect">Connect Wallet</button><br>
+  <input id="toAddress" placeholder="Friend's Wallet Address" style="padding: 5px; margin: 10px;">
+  <button id="transfer">Transfer 10 MBABY</button>
+  <p id="status">Ready to play? Connect MetaMask!</p>
+  <script>
+    const CONTRACT_ADDRESS = "0xD43DFA4C8B93da0F90CAd5B7B4b01D3657C94103"; // Remix se copy karo
+    const ABI = [
+      {
+        "inputs": [
+          {"internalType": "address", "name": "to", "type": "address"},
+          {"internalType": "uint256", "name": "amount", "type": "uint256"}
+        ],
+        "name": "transfer",
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+    
+    let provider, signer, contract;
+    
+    document.getElementById('connect').onclick = async () => {
+      if (window.ethereum) {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        document.getElementById('status').innerText = `Connected: ${await signer.getAddress()}`;
+      } else {
+        alert('Install MetaMask!');
+      }
+    };
+    
+    document.getElementById('transfer').onclick = async () => {
+      if (contract) {
+        try {
+          const toAddress = document.getElementById('toAddress').value;
+          if (!toAddress) {
+            alert('Enter a wallet address!');
+            return;
+          }
+          const tx = await contract.transfer(toAddress, ethers.parseEther("10"));
+          await tx.wait();
+          document.getElementById('status').innerText = 'Transferred 10 MBABY! Check for bonus! ??';
+        } catch (error) {
+          document.getElementById('status').innerText = 'Oops: ' + error.message;
+        }
+      } else {
+        alert('Connect wallet first!');
+      }
+    };
+  </script>
+</body>
+</html>
